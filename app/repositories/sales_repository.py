@@ -13,15 +13,17 @@ def get_all_sales():
     ORDER BY id;
     """
 
-    connection = get_connection()
-    cursor = connection.cursor()
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
 
-    cursor.execute(consulta)
+        cursor.execute(consulta)
 
-    resultados = cursor.fetchall()
+        resultados = cursor.fetchall()
 
-
-    return resultados
+        return resultados
+    except Exception:
+        raise
 
 def get_sales_by_id(id):
     consulta = """
@@ -35,30 +37,42 @@ def get_sales_by_id(id):
     FROM dbo.Ventas
     WHERE id = ?
     """
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+        cursor.execute(consulta, (id,))
+        resultado = cursor.fetchone()
 
-    connection = get_connection()
-    cursor = connection.cursor()
-    cursor.execute(consulta, (id,))
-    resultado = cursor.fetchone()
-
-    return resultado
+        return resultado
+    except Exception:
+        raise
 
 def create_sale(producto, categoria, precio, cantidad, fecha):
     consulta = """
     INSERT INTO dbo.Ventas
         (producto, categoria, precio, cantidad, fecha)
-        VALUES (?, ?, ?, ?, ?)
+    OUTPUT INSERTED.id
+    VALUES (?, ?, ?, ?, ?)
     """
 
-    connection = get_connection()
-    cursor = connection.cursor()
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
 
-    cursor.execute(
-        consulta,
-        (producto, categoria, precio, cantidad, fecha)
-    )
+        cursor.execute(
+            consulta,
+            (producto, categoria, precio, cantidad, fecha)
+        )
 
-    connection.commit()
+        sale_id = cursor.fetchone()[0]
+
+        connection.commit()
+
+        return sale_id
+    except Exception:
+        raise
+
+
 
 def update_sale(id, producto, categoria, precio, cantidad, fecha):
     consulta = """
@@ -69,18 +83,35 @@ def update_sale(id, producto, categoria, precio, cantidad, fecha):
         precio = ?,
         cantidad = ?,
         fecha = ?
+    OUTPUT INSERTED.*
     WHERE id = ?
     """
 
-    connection = get_connection()
-    cursor = connection.cursor()
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
 
-    cursor.execute(
-        consulta,
-        (producto, categoria, precio, cantidad, fecha, id)
-    )
+        cursor.execute(
+            consulta,
+            (producto, categoria, precio, cantidad, fecha, id)
+        )
 
-    connection.commit()
+        updated_sale = cursor.fetchone()
+
+        sale = {
+            "id": updated_sale[0],
+            "producto": updated_sale[1],
+            "categoria": updated_sale[2],
+            "precio": updated_sale[3],
+            "cantidad": updated_sale[4],
+            "fecha": updated_sale[5]
+        }
+
+        connection.commit()
+
+        return sale
+    except Exception:
+        raise
 
 def delete_sale(id):
     consulta = """
@@ -88,12 +119,15 @@ def delete_sale(id):
     WHERE id = ?
     """
 
-    connection = get_connection()
-    cursor = connection.cursor()
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
 
-    cursor.execute(
-        consulta,
-        (id,)
-    )
+        cursor.execute(
+            consulta,
+            (id,)
+        )
 
-    connection.commit()
+        connection.commit()
+    except Exception:
+        raise
