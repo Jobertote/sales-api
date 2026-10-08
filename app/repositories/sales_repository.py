@@ -13,8 +13,8 @@ def get_all_sales():
     ORDER BY id;
     """
 
+    connection = get_connection()
     try:
-        connection = get_connection()
         cursor = connection.cursor()
 
         cursor.execute(consulta)
@@ -22,8 +22,9 @@ def get_all_sales():
         resultados = cursor.fetchall()
 
         return resultados
-    except Exception:
-        raise
+    finally:
+        cursor.close()
+        connection.close()
 
 def get_sales_by_id(id):
     consulta = """
@@ -44,8 +45,9 @@ def get_sales_by_id(id):
         resultado = cursor.fetchone()
 
         return resultado
-    except Exception:
-        raise
+    finally:
+        cursor.close()
+        connection.close()
 
 def create_sale(producto, categoria, precio, cantidad, fecha):
     consulta = """
@@ -70,7 +72,11 @@ def create_sale(producto, categoria, precio, cantidad, fecha):
 
         return sale_id
     except Exception:
+        connection.rollback()
         raise
+    finally:
+        cursor.close()
+        connection.close()
 
 
 
@@ -111,7 +117,11 @@ def update_sale(id, producto, categoria, precio, cantidad, fecha):
 
         return sale
     except Exception:
+        connection.rollback()
         raise
+    finally:
+        cursor.close()
+        connection.close()
 
 def delete_sale(id):
     consulta = """
@@ -130,4 +140,8 @@ def delete_sale(id):
 
         connection.commit()
     except Exception:
+        connection.rollback()
         raise
+    finally:
+        cursor.close()
+        connection.close()
